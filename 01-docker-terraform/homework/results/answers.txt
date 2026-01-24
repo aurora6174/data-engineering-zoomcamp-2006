@@ -1,0 +1,20 @@
+Question 1 - Module 1
+Answer: pip 25.3
+
+Question 2 
+Answer: db:5432
+
+Question 3
+Answer: 8007
+
+Question 4:
+Answer: 2025-11-14
+
+Question 5:
+Answer: East Harlem North
+
+Question 6:
+Answer: Yorkville West
+
+Question 7:
+Answer: terraform init, terraform apply -auto-approve, terraform destroy
