@@ -1,0 +1,35 @@
+id: yellow_2020_12_file_size
+namespace: zoomcamp
+
+description: |
+  Download Yellow Taxi 2020-12, extract CSV, and print uncompressed file size
+
+tasks:
+  # 1. Download the compressed file
+  - id: download
+    type: io.kestra.plugin.core.http.Download
+    uri: https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2020-12.csv.gz
+    
+  # 2. Extract the .gz file (FIXED)
+  - id: extract
+    type: io.kestra.plugin.compress.FileDecompress # Corrected task type
+    from: "{{ outputs.download.uri }}" # Corrected output reference
+    compression: GZIP # Added missing compression type
+
+  # 3. Python task to check uncompressed file size (FIXED)
+  - id: check_file_size
+    type: io.kestra.plugin.scripts.python.Script # Corrected script type
+    inputFiles: # Use inputFiles to make the decompressed file available locally
+      yellow_tripdata_2020-12.csv: "{{ outputs.extract.uri }}"
+    script: |
+      import os
+
+      # Reference the locally available file
+      file_path = "yellow_tripdata_2020-12.csv"
+
+      size_bytes = os.path.getsize(file_path)
+      size_mb = size_bytes / (1024 * 1024)
+
+      print("Uncompressed file size:")
+      print(f"{size_bytes} bytes")
+      print(f"{size_mb:.2f} MB")
