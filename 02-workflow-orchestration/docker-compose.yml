@@ -1,0 +1,88 @@
+volumes:
+  ny_taxi_postgres_data:
+    driver: local
+  kestra_postgres_data:
+    driver: local
+  kestra_data:
+    driver: local
+
+services:
+  pgdatabase:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: ${NYTAXI_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${NYTAXI_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${NYTAXI_POSTGRES_DB}
+    ports:
+      - "${NYTAXI_POSTGRES_PORT}:5432"
+    volumes:
+      - ny_taxi_postgres_data:/var/lib/postgresql
+    depends_on:
+      kestra:
+        condition: service_started
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "${PGADMIN_PORT}:80"
+    depends_on:
+      pgdatabase:
+        condition: service_started
+
+  kestra_postgres:
+    image: postgres:18
+    volumes:
+      - kestra_postgres_data:/var/lib/postgresql
+    environment:
+      POSTGRES_DB: ${KESTRA_POSTGRES_DB}
+      POSTGRES_USER: ${KESTRA_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${KESTRA_POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+  kestra:
+    image: kestra/kestra:v1.1
+    pull_policy: always
+    user: "root"
+    command: server standalone
+    volumes:
+      - kestra_data:/app/storage
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/kestra-wd:/tmp/kestra-wd
+    environment:
+      KESTRA_CONFIGURATION: |
+        datasources:
+          postgres:
+            url: jdbc:postgresql://kestra_postgres:5432/${KESTRA_POSTGRES_DB}
+            driverClassName: org.postgresql.Driver
+            username: ${KESTRA_POSTGRES_USER}
+            password: ${KESTRA_POSTGRES_PASSWORD}
+        kestra:
+          server:
+            basicAuth:
+              username: "${KESTRA_ADMIN_EMAIL}"
+              password: ${KESTRA_ADMIN_PASSWORD}
+          repository:
+            type: postgres
+          storage:
+            type: local
+            local:
+              basePath: "/app/storage"
+          queue:
+            type: postgres
+          tasks:
+            tmpDir:
+              path: /tmp/kestra-wd/tmp
+          url: http://localhost:${KESTRA_UI_PORT}/
+    ports:
+      - "${KESTRA_UI_PORT}:8080"
+      - "${KESTRA_INTERNAL_PORT}:8081"
+    depends_on:
+      kestra_postgres:
+        condition: service_started
