@@ -206,6 +206,47 @@ Answer: False
 Clustering should only be used when frequently filtering or grouping by that column.
 
 
+## Clean Up
+
+### Step 1 - Drop Athena Tables
+
+- In Athena
+```bash        
+USE zoomcamp_dwh;
+```
+
+- Drop Tables
+```bash 
+DROP TABLE yellow_taxi_partitioned;
+DROP TABLE yellow_taxi_materialized;
+DROP TABLE yellow_taxi_external;
+```
+
+- Drop Database
+```bash
+DROP DATABASE zoomcamp_dwh;
+```
+
+### Step 2 - Empty the S3 Bucket
+
+```bash
+aws s3 rm s3://zoomcamp-yellow-taxi-dfe9a979 --recursive
+```
+
+- Verify its empty
+```bash
+aws s3 ls s3://zoomcamp-yellow-taxi-dfe9a979
+```
+
+### Run Terraform Destroy
+- Navigate to the appropriate folder 
+```bash
+terraform destroy
+```
+
+- Answer "yes" to prompt after reviewing changes to be made
+
+- Verify on AWS Console that bucket has been removed 
 
 
 
