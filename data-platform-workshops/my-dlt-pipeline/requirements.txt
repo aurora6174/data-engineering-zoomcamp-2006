@@ -1,0 +1,5 @@
+dlt[duckdb]>=1.22.2
+marimo
+pandas
+matplotlib
+pyarrow-hotfix
