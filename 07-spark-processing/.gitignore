@@ -1,0 +1,5 @@
+# Spark/data artifacts
+yellow_tripdata_*.parquet
+yellow_tripdata_*_repartitioned/
+**/_SUCCESS
+**/*.crc
